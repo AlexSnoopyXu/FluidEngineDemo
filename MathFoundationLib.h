@@ -1,5 +1,9 @@
 #pragma once
 #include "math.h"
+#include "MathGeoLib-1.5/src/Math/float3.h"
+
+typedef float3 Vector3f;
+
 class MathFoundationLib
 {
 };
@@ -50,4 +54,41 @@ struct Vector3D
 	{
 		return Vector3D(x - v.x, y - v.y, z - v.z);
 	}
+};
+
+class Field3 {
+public:
+	Field3();
+	virtual ~Field3();
+};
+
+class ScalarField3 : public Field3 {
+public:
+	ScalarField3();
+	virtual ~ScalarField3();
+
+	virtual float sample(const Vector3f& x) const = 0;
+};
+
+class VectorField3 : public Field3 {
+public:
+	VectorField3();
+	virtual ~VectorField3();
+
+	virtual Vector3f sample(const Vector3f& x) const = 0;
+};
+
+class ConstantVectorField3 : public VectorField3 {
+public:
+	ConstantVectorField3();
+	ConstantVectorField3(const Vector3f& value) : _value(value) {}
+	virtual ~ConstantVectorField3();
+
+	virtual Vector3f sample(const Vector3f& x) const override
+	{
+		return _value;
+	}
+
+private:
+	const Vector3f _value = Vector3f(1.f, 1.f, 1.f);
 };

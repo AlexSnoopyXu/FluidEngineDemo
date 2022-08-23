@@ -53,7 +53,6 @@ private:
 class SimpleMassSpringAnimation : public PhysicsAnimation
 {
 public:
-	typedef float3 Vector3f;
 	struct Edge
 	{
 		size_t first;
