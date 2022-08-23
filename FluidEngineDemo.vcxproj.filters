@@ -132,6 +132,9 @@
     <ClCompile Include="MathGeoLib-1.5\src\Algorithm\Random\LCG.cpp">
       <Filter>MathLib\Algorithm\Random</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimationBase.h">
@@ -316,6 +319,9 @@
     </ClInclude>
     <ClInclude Include="MathGeoLib-1.5\src\Algorithm\Random\LCG.h">
       <Filter>MathLib\Algorithm\Random</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

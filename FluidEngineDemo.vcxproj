@@ -172,6 +172,7 @@
     <ClCompile Include="MathGeoLib-1.5\src\Math\SSEMath.cpp" />
     <ClCompile Include="MathGeoLib-1.5\src\Math\TransformOps.cpp" />
     <ClCompile Include="MathGeoLib-1.5\src\Time\Clock.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimationBase.h" />
@@ -234,6 +235,7 @@
     <ClInclude Include="MathGeoLib-1.5\src\Math\sse_mathfun.h" />
     <ClInclude Include="MathGeoLib-1.5\src\Math\TransformOps.h" />
     <ClInclude Include="MathGeoLib-1.5\src\Time\Clock.h" />
+    <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
