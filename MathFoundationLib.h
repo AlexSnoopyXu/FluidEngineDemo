@@ -92,3 +92,11 @@ public:
 private:
 	const Vector3f _value = Vector3f(1.f, 1.f, 1.f);
 };
+
+class Collider3 {
+public:
+	Collider3();
+	virtual ~Collider3() {}
+
+	void resolveCollision(const Vector3f& currentPosition, const Vector3f& currentVelocity, float radius, float restitutionCoefficent, Vector3f& newPosition, Vector3f& newVelocity);
+};
