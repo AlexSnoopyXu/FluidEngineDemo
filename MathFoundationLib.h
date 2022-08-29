@@ -58,31 +58,31 @@ struct Vector3D
 
 class Field3 {
 public:
-	Field3();
-	virtual ~Field3();
+	Field3() {}
+	virtual ~Field3() {}
 };
 
 class ScalarField3 : public Field3 {
 public:
-	ScalarField3();
-	virtual ~ScalarField3();
+	ScalarField3() {}
+	virtual ~ScalarField3() {}
 
 	virtual float sample(const Vector3f& x) const = 0;
 };
 
 class VectorField3 : public Field3 {
 public:
-	VectorField3();
-	virtual ~VectorField3();
+	VectorField3() {}
+	virtual ~VectorField3() {}
 
 	virtual Vector3f sample(const Vector3f& x) const = 0;
 };
 
 class ConstantVectorField3 : public VectorField3 {
 public:
-	ConstantVectorField3();
+	ConstantVectorField3() {}
 	ConstantVectorField3(const Vector3f& value) : _value(value) {}
-	virtual ~ConstantVectorField3();
+	virtual ~ConstantVectorField3() {}
 
 	virtual Vector3f sample(const Vector3f& x) const override
 	{
@@ -95,7 +95,7 @@ private:
 
 class Collider3 {
 public:
-	Collider3();
+	Collider3() {}
 	virtual ~Collider3() {}
 
 	void resolveCollision(const Vector3f& currentPosition, const Vector3f& currentVelocity, float radius, float restitutionCoefficent, Vector3f& newPosition, Vector3f& newVelocity);

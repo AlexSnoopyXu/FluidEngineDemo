@@ -12,7 +12,7 @@ void ParticleSystemData3::resize(size_t newNumberOfParticles)
 
 size_t ParticleSystemData3::numOfParticles() const
 {
-
+	return 0;
 }
 
 const Vector3f* const ParticleSystemData3::positions() const
@@ -40,12 +40,12 @@ const float ParticleSystemData3::radius() const
 	return _radius;
 }
 
-void ParticleSystemData3::addParticle(const Vector3f& newPosition, const Vector3f& newVelocity = Vector3f(), const Vector3f& newForce = Vector3f())
+void ParticleSystemData3::addParticle(const Vector3f& newPosition, const Vector3f& newVelocity, const Vector3f& newForce)
 {
 
 }
 
-void ParticleSystemData3::addParticles(const VectorArray& newPositions, const VectorArray& newVelocities = VectorArray(), const VectorArray& newForce = VectorArray())
+void ParticleSystemData3::addParticles(const VectorArray& newPositions, const VectorArray& newVelocities, const VectorArray& newForce)
 {
 
 }
@@ -95,7 +95,7 @@ void PointHashGridSearcher3::build(const ParticleSystemData3::VectorArray& point
 
 void PointHashGridSearcher3::forEachNearbyPoint(const Vector3f& origin, float radius, const ForEachNeighborPointFunc& callback) const
 {
-
+	_resolution.x;
 }
 
 size_t PointHashGridSearcher3::getHashKeyFromPosition(const Vector3f& position)

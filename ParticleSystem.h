@@ -35,7 +35,7 @@ class PointNeighborSearcher3
 public:
 	typedef std::function<void(size_t, const Vector3f&)> ForEachNeighborPointFunc;
 
-	PointNeighborSearcher3();
+	PointNeighborSearcher3() {}
 	virtual ~PointNeighborSearcher3(){}
 
 	virtual void build(const ParticleSystemData3::VectorArray& points) = 0;
