@@ -1,5 +1,6 @@
 #pragma once
 #include "AnimationBase.h"
+#include <functional>
 
 struct ParticleSystemData3 {
 public:
@@ -27,6 +28,40 @@ private:
 	VectorArray _forces;
 	float _mass;
 	float _radius;
+};
+
+class PointNeighborSearcher3
+{
+public:
+	typedef std::function<void(size_t, const Vector3f&)> ForEachNeighborPointFunc;
+
+	PointNeighborSearcher3();
+	virtual ~PointNeighborSearcher3(){}
+
+	virtual void build(const ParticleSystemData3::VectorArray& points) = 0;
+
+	virtual void forEachNearbyPoint(const Vector3f& origin, float radius, const ForEachNeighborPointFunc& callback) const = 0;
+};
+
+class PointHashGridSearcher3 final : public PointNeighborSearcher3
+{
+public:
+	PointHashGridSearcher3(const Vector3f& resolution, float gridSpacing);
+	PointHashGridSearcher3(size_t resolutionX, size_t resolutionY, size_t resolutionZ, float gridSpacing);
+
+	virtual void build(const ParticleSystemData3::VectorArray& points) override;
+	virtual void forEachNearbyPoint(const Vector3f& origin, float radius, const ForEachNeighborPointFunc& callback) const override;
+
+private:
+	float _gridSpacing;
+	Vector3f _resolution;
+	ParticleSystemData3::VectorArray _points;
+	std::vector<std::vector<size_t>> _buckets;
+
+private:
+	size_t getHashKeyFromPosition(const Vector3f& position);
+	Vector3f getBucketIndex(const Vector3f& position);
+	size_t getHashKeyFromBucketIndex(const Vector3f& bucketIndex);
 };
 
 class ParticleSystemSolver3 : public PhysicsAnimation 

@@ -55,6 +55,87 @@ void ParticleSystemData3::setMass(float mass)
 	_mass = mass;
 }
 
+/* Foundations function of particles */
+
+PointHashGridSearcher3::PointHashGridSearcher3(const Vector3f& resolution, float gridSpacing)
+{
+
+}
+
+PointHashGridSearcher3::PointHashGridSearcher3(size_t resolutionX, size_t resolutionY, size_t resolutionZ, float gridSpacing)
+{
+
+}
+
+void PointHashGridSearcher3::build(const ParticleSystemData3::VectorArray& points)
+{
+	_buckets.clear();
+	_points.clear();
+
+	if (points.size() == 0)
+	{
+		return;
+	}
+
+	if (_resolution.x <= 0 || _resolution.y <= 0 || _resolution.z <= 0)
+	{
+		return;
+	}
+
+	_buckets.resize(_resolution.x * _resolution.y * _resolution.z);
+	_points.resize(points.size());
+
+	for (size_t i = 0; i < points.size(); i++)
+	{
+		_points[i] = points[i];
+		size_t key = getHashKeyFromPosition(points[i]);
+		_buckets[key].push_back(i);
+	}
+}
+
+void PointHashGridSearcher3::forEachNearbyPoint(const Vector3f& origin, float radius, const ForEachNeighborPointFunc& callback) const
+{
+
+}
+
+size_t PointHashGridSearcher3::getHashKeyFromPosition(const Vector3f& position)
+{
+	Vector3f bucketIndex = getBucketIndex(position);
+	return getHashKeyFromBucketIndex(bucketIndex);
+}
+
+Vector3f PointHashGridSearcher3::getBucketIndex(const Vector3f& position)
+{
+	Vector3f index;
+	index.x = static_cast<size_t>(std::floor(position.x / _gridSpacing));
+	index.y = static_cast<size_t>(std::floor(position.y / _gridSpacing));
+	index.z = static_cast<size_t>(std::floor(position.z / _gridSpacing));
+	return index;
+}
+
+size_t PointHashGridSearcher3::getHashKeyFromBucketIndex(const Vector3f& bucketIndex)
+{
+	Vector3f wrappedIndex = bucketIndex;
+	wrappedIndex.x = static_cast<size_t>(bucketIndex.x) % static_cast<size_t>(_resolution.x);
+	wrappedIndex.y = static_cast<size_t>(bucketIndex.y) % static_cast<size_t>(_resolution.y);
+	wrappedIndex.z = static_cast<size_t>(bucketIndex.z) % static_cast<size_t>(_resolution.z);
+
+	if (wrappedIndex.x < 0)
+	{
+		wrappedIndex.x += static_cast<size_t>(_resolution.x);
+	}
+	if (wrappedIndex.y < 0)
+	{
+		wrappedIndex.y += static_cast<size_t>(_resolution.y);
+	}
+	if (wrappedIndex.z < 0)
+	{
+		wrappedIndex.z += static_cast<size_t>(_resolution.z);
+	}
+
+	return static_cast<size_t>((wrappedIndex.z * _resolution.y + wrappedIndex.y) * _resolution.x + wrappedIndex.x);
+}
+
 /* Solver begin */
 
 ParticleSystemSolver3::ParticleSystemSolver3()
