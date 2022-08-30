@@ -15,19 +15,19 @@ size_t ParticleSystemData3::numOfParticles() const
 	return 0;
 }
 
-const Vector3f* const ParticleSystemData3::positions() const
+const VectorArray& const ParticleSystemData3::positions() const
 {
-	return _positions.cbegin()._Ptr;
+	return _positions;
 }
 
-const Vector3f* const ParticleSystemData3::velocities() const
+const VectorArray& const ParticleSystemData3::velocities() const
 {
-	return _velocities.cbegin()._Ptr;
+	return _velocities;
 }
 
-const Vector3f* const ParticleSystemData3::forces() const
+const VectorArray& const ParticleSystemData3::forces() const
 {
-	return _forces.cbegin()._Ptr;
+	return _forces;
 }
 
 const float ParticleSystemData3::mass() const 
@@ -55,92 +55,38 @@ void ParticleSystemData3::setMass(float mass)
 	_mass = mass;
 }
 
-/* Foundations function of particles */
-
-PointHashGridSearcher3::PointHashGridSearcher3(const Vector3f& resolution, float gridSpacing)
+void ParticleSystemData3::buildNearbySearcher(float maxSearchRadius)
 {
-
+	_pointNeighborSearcher = std::make_shared<PointHashGridSearcher3>(kDefaultHashGridResolution, kDefaultHashGridResolution, kDefaultHashGridResolution, 2 * maxSearchRadius);
+	_pointNeighborSearcher->build(positions());
 }
 
-PointHashGridSearcher3::PointHashGridSearcher3(size_t resolutionX, size_t resolutionY, size_t resolutionZ, float gridSpacing)
+void ParticleSystemData3::buildNearbyList(float maxSearchRadius)
 {
+	_neighborLists.resize(numOfParticles());
 
-}
-
-void PointHashGridSearcher3::build(const ParticleSystemData3::VectorArray& points)
-{
-	_buckets.clear();
-	_points.clear();
-
-	if (points.size() == 0)
+	auto points = positions();
+	for (size_t i = 0; i < numOfParticles(); i++)
 	{
-		return;
+		Vector3f origin = points[i];
+		_neighborLists[i].clear();
+		_pointNeighborSearcher->forEachNearbyPoint(
+			origin,
+			maxSearchRadius,
+			[&](size_t j, const Vector3f&) {
+			if (j != i)
+			{
+				_neighborLists[i].push_back(j);
+			}
+		}
+		);
 	}
-
-	if (_resolution.x <= 0 || _resolution.y <= 0 || _resolution.z <= 0)
-	{
-		return;
-	}
-
-	_buckets.resize(_resolution.x * _resolution.y * _resolution.z);
-	_points.resize(points.size());
-
-	for (size_t i = 0; i < points.size(); i++)
-	{
-		_points[i] = points[i];
-		size_t key = getHashKeyFromPosition(points[i]);
-		_buckets[key].push_back(i);
-	}
-}
-
-void PointHashGridSearcher3::forEachNearbyPoint(const Vector3f& origin, float radius, const ForEachNeighborPointFunc& callback) const
-{
-	_resolution.x;
-}
-
-size_t PointHashGridSearcher3::getHashKeyFromPosition(const Vector3f& position)
-{
-	Vector3f bucketIndex = getBucketIndex(position);
-	return getHashKeyFromBucketIndex(bucketIndex);
-}
-
-Vector3f PointHashGridSearcher3::getBucketIndex(const Vector3f& position)
-{
-	Vector3f index;
-	index.x = static_cast<size_t>(std::floor(position.x / _gridSpacing));
-	index.y = static_cast<size_t>(std::floor(position.y / _gridSpacing));
-	index.z = static_cast<size_t>(std::floor(position.z / _gridSpacing));
-	return index;
-}
-
-size_t PointHashGridSearcher3::getHashKeyFromBucketIndex(const Vector3f& bucketIndex)
-{
-	Vector3f wrappedIndex = bucketIndex;
-	wrappedIndex.x = static_cast<size_t>(bucketIndex.x) % static_cast<size_t>(_resolution.x);
-	wrappedIndex.y = static_cast<size_t>(bucketIndex.y) % static_cast<size_t>(_resolution.y);
-	wrappedIndex.z = static_cast<size_t>(bucketIndex.z) % static_cast<size_t>(_resolution.z);
-
-	if (wrappedIndex.x < 0)
-	{
-		wrappedIndex.x += static_cast<size_t>(_resolution.x);
-	}
-	if (wrappedIndex.y < 0)
-	{
-		wrappedIndex.y += static_cast<size_t>(_resolution.y);
-	}
-	if (wrappedIndex.z < 0)
-	{
-		wrappedIndex.z += static_cast<size_t>(_resolution.z);
-	}
-
-	return static_cast<size_t>((wrappedIndex.z * _resolution.y + wrappedIndex.y) * _resolution.x + wrappedIndex.x);
 }
 
 /* Solver begin */
 
 ParticleSystemSolver3::ParticleSystemSolver3()
 {
-	ParticleSystemData3::ParticleSystemData3();
 	_particleSystemData = std::make_shared<ParticleSystemData3>();
 	_wind = std::make_shared<ConstantVectorField3>();
 }
@@ -185,7 +131,7 @@ void ParticleSystemSolver3::beginAdvanceTimeStep()
 	_newVelocities.resize(n);
 
 	// Clear forces
-	auto forces = const_cast<Vector3f*>(_particleSystemData->forces());
+	auto forces = const_cast<VectorArray&>(_particleSystemData->forces());
 	for (size_t i = 0; i < n; i++)
 	{
 		forces[i] = Vector3f();
@@ -199,8 +145,8 @@ void ParticleSystemSolver3::endAdvanceTimeStep()
 {
 	size_t n = _particleSystemData->numOfParticles();
 
-	auto positions = const_cast<Vector3f*>(_particleSystemData->positions());
-	auto velocities = const_cast<Vector3f*>(_particleSystemData->velocities());
+	auto positions = const_cast<VectorArray&>(_particleSystemData->positions());
+	auto velocities = const_cast<VectorArray&>(_particleSystemData->velocities());
 	for (size_t i = 0; i < n; i++)
 	{
 		positions[i] = _newPositions[i];
@@ -235,7 +181,7 @@ void ParticleSystemSolver3::accumulateExternalForces()
 {
 	size_t n = _particleSystemData->numOfParticles();
 	auto positions = _particleSystemData->positions();
-	auto forces = const_cast<Vector3f*>(_particleSystemData->forces());
+	auto forces = const_cast<VectorArray&>(_particleSystemData->forces());
 	auto velocities = _particleSystemData->velocities();
 	const float mass = _particleSystemData->mass();
 

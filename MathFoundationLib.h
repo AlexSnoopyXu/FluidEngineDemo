@@ -1,8 +1,10 @@
 #pragma once
 #include "math.h"
+#include <vector>
 #include "MathGeoLib-1.5/src/Math/float3.h"
 
 typedef float3 Vector3f;
+typedef std::vector<Vector3f> VectorArray;
 
 class MathFoundationLib
 {

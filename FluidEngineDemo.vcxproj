@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="AnimationBase.cpp" />
     <ClCompile Include="FluidEngineDemo.cpp" />
+    <ClCompile Include="FoundationalFunctionLib.cpp" />
     <ClCompile Include="MathFoundationLib.cpp" />
     <ClCompile Include="MathGeoLib-1.5\src\Algorithm\Random\LCG.cpp" />
     <ClCompile Include="MathGeoLib-1.5\src\Geometry\AABB.cpp" />
@@ -176,6 +177,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimationBase.h" />
+    <ClInclude Include="FoundationalFunctionLib.h" />
     <ClInclude Include="MathFoundationLib.h" />
     <ClInclude Include="MathGeoLib-1.5\src\Algorithm\Random\LCG.h" />
     <ClInclude Include="MathGeoLib-1.5\src\Geometry\AABB.h" />

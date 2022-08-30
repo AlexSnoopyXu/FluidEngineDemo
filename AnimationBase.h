@@ -1,7 +1,6 @@
 #pragma once
 #include <iostream>
 #include "MathFoundationLib.h"
-#include <vector>
 #include "MathGeoLib-1.5/src/Math/float3.h"
 
 using namespace std;

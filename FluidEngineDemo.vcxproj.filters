@@ -135,6 +135,9 @@
     <ClCompile Include="ParticleSystem.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="FoundationalFunctionLib.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimationBase.h">
@@ -321,6 +324,9 @@
       <Filter>MathLib\Algorithm\Random</Filter>
     </ClInclude>
     <ClInclude Include="ParticleSystem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FoundationalFunctionLib.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
