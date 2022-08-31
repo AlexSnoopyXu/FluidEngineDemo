@@ -5,6 +5,11 @@
 
 typedef float3 Vector3f;
 typedef std::vector<Vector3f> VectorArray;
+typedef std::vector<float> FloatArray;
+typedef std::vector<size_t> SizeTArray;
+
+
+constexpr float kPiD = 3.141592653589793f;
 
 class MathFoundationLib
 {
@@ -93,12 +98,4 @@ public:
 
 private:
 	const Vector3f _value = Vector3f(1.f, 1.f, 1.f);
-};
-
-class Collider3 {
-public:
-	Collider3() {}
-	virtual ~Collider3() {}
-
-	void resolveCollision(const Vector3f& currentPosition, const Vector3f& currentVelocity, float radius, float restitutionCoefficent, Vector3f& newPosition, Vector3f& newVelocity);
 };

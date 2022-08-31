@@ -1,6 +1,10 @@
 /* Foundations function of particles */
 #include "FoundationalFunctionLib.h"
 
+void Collider3::resolveCollision(const Vector3f& currentPosition, const Vector3f& currentVelocity, float radius, float restitutionCoefficent, Vector3f& newPosition, Vector3f& newVelocity)
+{
+
+}
 
 PointHashGridSearcher3::PointHashGridSearcher3(const Vector3f& resolution, float gridSpacing) : _gridSpacing(gridSpacing), _resolution(resolution)
 {
@@ -164,4 +168,19 @@ void PointHashGridSearcher3::getNearbyKeys(const Vector3f& origin, size_t* nearb
 	{
 		nearbyKeys[i] = getHashKeyFromBucketIndex(nearbyBucketIndeics[i]);
 	}
+}
+
+float SphStdkernel3::operator()(float distance) const
+{
+	float distanceSquared = powf(distance, 2);
+	if (distanceSquared > h2)
+	{
+		return 0.f;
+	}
+	else
+	{
+		float x = 1 - distanceSquared / h2;
+		return 315.f / (64 * kPiD * h3) * powf(x, 3);
+	}
+	return 0.f;
 }

@@ -25,6 +25,10 @@ public:
 
 	void buildNearbySearcher(float maxSearchRadius);
 	void buildNearbyList(float maxSearchRadius);
+
+protected:
+	std::shared_ptr<PointHashGridSearcher3> neighborSearcher() const { return _pointNeighborSearcher; }
+
 private:
 	VectorArray _positions;
 	VectorArray _velocities;
@@ -36,6 +40,23 @@ private:
 
 	std::shared_ptr<PointHashGridSearcher3> _pointNeighborSearcher;
 	std::vector<vector<size_t>> _neighborLists;
+};
+
+struct SphSystemData3 : public ParticleSystemData3
+{
+public:
+	SphSystemData3() {}
+	virtual ~SphSystemData3() {}
+
+	const FloatArray& densities() const { return _densities; }
+	FloatArray& densities() { return _densities; }
+	void updateDensities();
+	float sumOfKernelNearby(const Vector3f& position) const;
+
+	Vector3f interpolate(const Vector3f& origin, const VectorArray& values) const;
+
+private:
+	FloatArray _densities;
 };
 
 class ParticleSystemSolver3 : public PhysicsAnimation 

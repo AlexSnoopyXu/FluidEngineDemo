@@ -3,6 +3,14 @@
 #include <functional>
 #include <vector>
 
+class Collider3 {
+public:
+	Collider3() {}
+	virtual ~Collider3() {}
+
+	void resolveCollision(const Vector3f& currentPosition, const Vector3f& currentVelocity, float radius, float restitutionCoefficent, Vector3f& newPosition, Vector3f& newVelocity);
+};
+
 class PointNeighborSearcher3
 {
 public:
@@ -38,3 +46,13 @@ private:
 	void getNearbyKeys(const Vector3f& origin, size_t* nearbyKeys) const;
 };
 
+
+struct SphStdkernel3
+{
+	float h, h2, h3;
+
+	SphStdkernel3() : h(0), h2(0), h3(0) {}
+	explicit SphStdkernel3(float kernelRadius) : h(kernelRadius), h2(h * h), h3(h2 * h) {}
+	SphStdkernel3(const SphStdkernel3& other) : h(other.h), h2(other.h2), h3(other.h3) {}
+	float operator()(float distance) const;
+};

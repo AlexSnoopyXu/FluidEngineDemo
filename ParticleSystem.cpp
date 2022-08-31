@@ -83,6 +83,48 @@ void ParticleSystemData3::buildNearbyList(float maxSearchRadius)
 	}
 }
 
+/* Sph system*/
+
+void SphSystemData3::updateDensities()
+{
+	auto& p = positions();
+	auto& d = densities();
+
+	for (size_t i = 0; i < numOfParticles(); i++)
+	{
+		d[i] = mass() * sumOfKernelNearby(p[i]);
+	}
+}
+
+float SphSystemData3::sumOfKernelNearby(const Vector3f& position) const
+{
+	float sum = 0.f;
+	SphStdkernel3 kernel(radius());
+	
+	neighborSearcher()->forEachNearbyPoint(position, radius(),
+		[&](size_t, const Vector3f& neighborPosition) {
+		float dist = position.Distance(neighborPosition);
+		sum += kernel(dist);
+	});
+
+	return sum;
+}
+
+Vector3f SphSystemData3::interpolate(const Vector3f& origin, const VectorArray& values) const
+{
+	Vector3f sum;
+	auto& d = densities();
+	SphStdkernel3 kernel(radius());
+	neighborSearcher()->forEachNearbyPoint(origin, radius(),
+		[&](size_t i, const Vector3f& neighborPosition) {
+		float dist = origin.Distance(neighborPosition);
+		float weight = mass() / d[i] * kernel(dist);
+		sum += weight * values[i];
+	});
+
+	return sum;
+}
+
 /* Solver begin */
 
 ParticleSystemSolver3::ParticleSystemSolver3()
