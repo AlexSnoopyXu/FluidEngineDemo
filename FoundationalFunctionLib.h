@@ -3,6 +3,15 @@
 #include <functional>
 #include <vector>
 
+enum class SPHKernelType {
+	None = 0,
+
+	Std = 1,
+	Spiky = 2,
+
+	Max
+};
+
 class Collider3 {
 public:
 	Collider3() {}
@@ -46,13 +55,50 @@ private:
 	void getNearbyKeys(const Vector3f& origin, size_t* nearbyKeys) const;
 };
 
-
-struct SphStdkernel3
+struct SphKernelBase3
 {
-	float h, h2, h3;
+	SphKernelBase3() {}
+	virtual ~SphKernelBase3(){}
+	virtual float operator()(float distance) const { return 0.f; }
 
-	SphStdkernel3() : h(0), h2(0), h3(0) {}
-	explicit SphStdkernel3(float kernelRadius) : h(kernelRadius), h2(h * h), h3(h2 * h) {}
-	SphStdkernel3(const SphStdkernel3& other) : h(other.h), h2(other.h2), h3(other.h3) {}
-	float operator()(float distance) const;
+	virtual float firstDerivative(float distance) const { return 0.f; }
+	virtual Vector3f gradient(float distance, const Vector3f& direction) const { return Vector3f(); }
+
+	virtual float secondDerivative(float distance) const { return 0.f; }
+};
+
+struct SphStdKernel3 : public SphKernelBase3
+{
+	float h, h2, h3, h5;
+
+	SphStdKernel3() : h(0), h2(0), h3(0), h5(0) {}
+	explicit SphStdKernel3(float kernelRadius) : h(kernelRadius), h2(h * h), h3(h2 * h), h5(h3 * h2) {}
+	SphStdKernel3(const SphStdKernel3& other) : h(other.h), h2(other.h2), h3(other.h3), h5(other.h5) {}
+	virtual float operator()(float distance) const override;
+
+	/*
+	* Differential operators
+	*/
+	virtual float firstDerivative(float distance) const override;
+	virtual Vector3f gradient(float distance, const Vector3f& direction) const override;
+
+	virtual float secondDerivative(float distance) const override;
+};
+
+struct SphSpikyKernel3 : public SphKernelBase3
+{
+	float h, h2, h3, h4, h5;
+
+	SphSpikyKernel3() : h(0), h2(0), h3(0), h4(0), h5(0) {}
+	explicit SphSpikyKernel3(float kernelRadius) : h(kernelRadius), h2(h* h), h3(h2* h), h4(h3 * h), h5(h3* h2) {}
+	SphSpikyKernel3(const SphSpikyKernel3& other) : h(other.h), h2(other.h2), h3(other.h3), h4(other.h4), h5(other.h5) {}
+	virtual float operator()(float distance) const override;
+
+	/*
+	* Differential operators
+	*/
+	virtual float firstDerivative(float distance) const override;
+	virtual Vector3f gradient(float distance, const Vector3f& direction) const override;
+
+	virtual float secondDerivative(float distance) const override;
 };

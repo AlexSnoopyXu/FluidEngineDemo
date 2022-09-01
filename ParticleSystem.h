@@ -18,6 +18,7 @@ public:
 	const VectorArray& const forces() const;
 	const float mass() const;
 	const float radius() const;
+	const std::vector<vector<size_t>>& neighborLists() const;
 
 	void addParticle(const Vector3f& newPosition, const Vector3f& newVelocity = Vector3f(), const Vector3f& newForce = Vector3f());
 	void addParticles(const VectorArray& newPositions, const VectorArray& newVelocities = VectorArray(), const VectorArray& newForce = VectorArray());
@@ -51,10 +52,12 @@ public:
 	const FloatArray& densities() const { return _densities; }
 	FloatArray& densities() { return _densities; }
 	void updateDensities();
-	float sumOfKernelNearby(const Vector3f& position) const;
+	float sumOfKernelNearby(const Vector3f& position, SPHKernelType kernelType = SPHKernelType::Std) const;
 
-	Vector3f interpolate(const Vector3f& origin, const VectorArray& values) const;
+	Vector3f interpolate(const Vector3f& origin, const VectorArray& values, SPHKernelType kernelType = SPHKernelType::Std) const;
 
+	Vector3f gradientAt(size_t i, const FloatArray& values, SPHKernelType kernelType = SPHKernelType::Std) const;
+	float laplaciantAt(size_t i, const FloatArray& values, SPHKernelType kernelType = SPHKernelType::Std) const;
 private:
 	FloatArray _densities;
 };

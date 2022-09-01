@@ -170,7 +170,7 @@ void PointHashGridSearcher3::getNearbyKeys(const Vector3f& origin, size_t* nearb
 	}
 }
 
-float SphStdkernel3::operator()(float distance) const
+float SphStdKernel3::operator()(float distance) const
 {
 	float distanceSquared = powf(distance, 2);
 	if (distanceSquared > h2)
@@ -183,4 +183,79 @@ float SphStdkernel3::operator()(float distance) const
 		return 315.f / (64 * kPiD * h3) * powf(x, 3);
 	}
 	return 0.f;
+}
+
+float SphStdKernel3::firstDerivative(float distance) const
+{
+	if (distance >= h)
+	{
+		return 0.0f;
+	}
+	else
+	{
+		float x = 1 - powf(distance, 2) / h2;
+		return -945.f / (32 * kPiD * h5) * distance * powf(x, 2);
+	}
+}
+
+Vector3f SphStdKernel3::gradient(float distance, const Vector3f& direction) const
+{
+	return -firstDerivative(distance) * direction;
+}
+
+float SphStdKernel3::secondDerivative(float distance) const
+{
+	if (distance > h2)
+	{
+		return 0.f;
+	}
+	else
+	{
+		float x = powf(distance, 2) / h2;
+		return 945.f / (32 * kPiD * h5) * (1 - x) * (3 * x - 1);
+	}
+}
+
+float SphSpikyKernel3::operator()(float distance) const
+{
+	if (distance >= h)
+	{
+		return 0.f;
+	}
+	else
+	{
+		float x = 1 - distance / h;
+		return 15.f / (kPiD * h3) * x * powf(x, 2);
+	}
+}
+
+float SphSpikyKernel3::firstDerivative(float distance) const
+{
+	if (distance >= h)
+	{
+		return 0.f;
+	}
+	else
+	{
+		float x = 1 - distance / h;
+		return -45.f / (kPiD * h4) * powf(x, 2);
+	}
+}
+
+Vector3f SphSpikyKernel3::gradient(float distance, const Vector3f& direction) const
+{
+	return -firstDerivative(distance) * direction;
+}
+
+float SphSpikyKernel3::secondDerivative(float distance) const
+{
+	if (distance >= h)
+	{
+		return 0.f;
+	}
+	else
+	{
+		float x = 1 - distance / h;
+		return 90.f / (kPiD * h5) * x;
+	}
 }

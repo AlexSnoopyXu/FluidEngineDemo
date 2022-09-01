@@ -40,6 +40,11 @@ const float ParticleSystemData3::radius() const
 	return _radius;
 }
 
+const std::vector<vector<size_t>>& ParticleSystemData3::neighborLists() const
+{
+	return _neighborLists;
+}
+
 void ParticleSystemData3::addParticle(const Vector3f& newPosition, const Vector3f& newVelocity, const Vector3f& newForce)
 {
 
@@ -96,10 +101,18 @@ void SphSystemData3::updateDensities()
 	}
 }
 
-float SphSystemData3::sumOfKernelNearby(const Vector3f& position) const
+float SphSystemData3::sumOfKernelNearby(const Vector3f& position, SPHKernelType kernelType) const
 {
 	float sum = 0.f;
-	SphStdkernel3 kernel(radius());
+	SphKernelBase3 kernel;
+	if (kernelType == SPHKernelType::Std)
+	{
+		kernel = SphStdKernel3(radius());
+	}
+	else
+	{
+		kernel = SphSpikyKernel3(radius());
+	}
 	
 	neighborSearcher()->forEachNearbyPoint(position, radius(),
 		[&](size_t, const Vector3f& neighborPosition) {
@@ -110,17 +123,85 @@ float SphSystemData3::sumOfKernelNearby(const Vector3f& position) const
 	return sum;
 }
 
-Vector3f SphSystemData3::interpolate(const Vector3f& origin, const VectorArray& values) const
+Vector3f SphSystemData3::interpolate(const Vector3f& origin, const VectorArray& values, SPHKernelType kernelType) const
 {
 	Vector3f sum;
 	auto& d = densities();
-	SphStdkernel3 kernel(radius());
+	SphKernelBase3 kernel;
+	if (kernelType == SPHKernelType::Std)
+	{
+		kernel = SphStdKernel3(radius());
+	}
+	else
+	{
+		kernel = SphSpikyKernel3(radius());
+	}
 	neighborSearcher()->forEachNearbyPoint(origin, radius(),
 		[&](size_t i, const Vector3f& neighborPosition) {
 		float dist = origin.Distance(neighborPosition);
 		float weight = mass() / d[i] * kernel(dist);
 		sum += weight * values[i];
 	});
+
+	return sum;
+}
+
+Vector3f SphSystemData3::gradientAt(size_t i, const FloatArray& values, SPHKernelType kernelType) const
+{
+	Vector3f sum;
+
+	auto p = positions();
+	auto d = densities();
+	const auto& neighbors = neighborLists()[i];
+	const Vector3f& origin = p[i];
+	SphKernelBase3 kernel;
+	if (kernelType == SPHKernelType::Std)
+	{
+		kernel = SphStdKernel3(radius());
+	}
+	else
+	{
+		kernel = SphSpikyKernel3(radius());
+	}
+
+	for (size_t j : neighbors)
+	{
+		const Vector3f& neighborPosition = p[j];
+		float dist = origin.Distance(neighborPosition);
+		if (dist > 0)
+		{
+			const Vector3f& dir = (neighborPosition - origin).Normalized();
+			sum += d[i] * mass() * (values[i] / powf(d[i], 2) + values[j] / powf(d[j], 2)) * kernel.gradient(dist, dir);
+		}
+	}
+
+	return sum;
+}
+
+float SphSystemData3::laplaciantAt(size_t i, const FloatArray& values, SPHKernelType kernelType) const
+{
+	float sum = 0.f;
+
+	auto p = positions();
+	auto d = densities();
+	const auto& neighbors = neighborLists()[i];
+	const Vector3f& origin = p[i];
+	SphKernelBase3 kernel;
+	if (kernelType == SPHKernelType::Std)
+	{
+		kernel = SphStdKernel3(radius());
+	}
+	else
+	{
+		kernel = SphSpikyKernel3(radius());
+	}	
+
+	for (size_t j : neighbors)
+	{
+		const Vector3f& neighborPosition = p[j];
+		float dist = origin.Distance(neighborPosition);
+		sum += mass() * (values[j] - values[j]) / d[j] * kernel.secondDerivative(dist);
+	}
 
 	return sum;
 }
