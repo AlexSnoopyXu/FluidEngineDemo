@@ -3,6 +3,8 @@
 #include <functional>
 #include "FoundationalFunctionLib.h"
 
+#define Square(x) MathFoundationLib::square(x)
+
 struct ParticleSystemData3 {
 public:
 
@@ -51,6 +53,12 @@ public:
 
 	const FloatArray& densities() const { return _densities; }
 	FloatArray& densities() { return _densities; }
+
+	const float targetDensity() const { return 10.f; }
+
+	const FloatArray& pressures() const { return _pressures; }
+	FloatArray& pressures() { return _pressures; }
+
 	void updateDensities();
 	float sumOfKernelNearby(const Vector3f& position, SPHKernelType kernelType = SPHKernelType::Std) const;
 
@@ -60,6 +68,7 @@ public:
 	float laplaciantAt(size_t i, const FloatArray& values, SPHKernelType kernelType = SPHKernelType::Std) const;
 private:
 	FloatArray _densities;
+	FloatArray _pressures;
 };
 
 class ParticleSystemSolver3 : public PhysicsAnimation 
@@ -95,3 +104,32 @@ private:
 	void accumulateExternalForces();
 };
 
+class SphSystemSolver3 : public ParticleSystemSolver3
+{
+public:
+	SphSystemSolver3();
+	virtual ~SphSystemSolver3(){}
+
+	shared_ptr<SphSystemData3> sphSystemData3() const { return _sphSystemData3; }
+
+protected:
+	virtual void accumulateForces(double timeStepInSeconds) override;
+	virtual void onBeginAdvanceTimeStep() override;
+	virtual void onEndAdvanceTimeStep() override;
+
+	virtual void accumulateNonPressureForces(float timeStepInSeconds);
+	virtual void accumulatePressureForces(float timeStepInSeconds);
+
+	void computePressure();
+	void accumulateViscosityForece();
+	void computePseudeViscosity();
+
+	float computePressureFromEOS(float density, float targetDensity, float eosScale, float eosExponent, float negativePressureScale = 0);
+
+private:
+	shared_ptr<SphSystemData3> _sphSystemData3;
+
+	const float _kMaxSearchRadius = 10.f;
+	const float _kSpeedOfSound = 340.f;
+	const float _eosExponent = 2.f;
+};

@@ -321,3 +321,103 @@ void ParticleSystemSolver3::accumulateExternalForces()
 	}
 
 }
+
+
+/*
+*	SphSystemSolver
+*/
+
+
+SphSystemSolver3::SphSystemSolver3() {
+	_sphSystemData3 = std::make_shared<SphSystemData3>();
+}
+
+void SphSystemSolver3::accumulateForces(double timeStepInSeconds)
+{
+	accumulateNonPressureForces(timeStepInSeconds);
+	accumulatePressureForces(timeStepInSeconds);
+}
+
+void SphSystemSolver3::onBeginAdvanceTimeStep()
+{
+	auto particles = sphSystemData3();
+	particles->buildNearbySearcher(_kMaxSearchRadius);
+	particles->buildNearbyList(_kMaxSearchRadius);
+	particles->updateDensities();
+}
+
+void SphSystemSolver3::onEndAdvanceTimeStep()
+{
+	computePseudeViscosity();
+}
+
+void SphSystemSolver3::accumulateNonPressureForces(float timeStepInSeconds)
+{
+	ParticleSystemSolver3::accumulateForces(timeStepInSeconds);
+	accumulateViscosityForece();
+}
+
+void SphSystemSolver3::accumulatePressureForces(float timeStepInSeconds)
+{
+	auto particles = sphSystemData3();
+	auto x = particles->positions();
+	auto d = particles->densities();
+	auto f = particles->forces();
+	auto p = particles->pressures();
+
+	computePressure();
+	
+	size_t numberOfParticls = particles->numOfParticles();
+	const float massSquared = Square(particles->mass());
+	const SphSpikyKernel3 kernel(particles->radius());
+
+	for (size_t i = 0; i < numberOfParticls; i++)
+	{
+		const auto& neighbors = particles->neighborLists()[i];
+		for (size_t j : neighbors)
+		{
+			double dist = x[i].Distance(x[j]);
+			if (dist)
+			{
+				Vector3f dir = (x[j] - x[i]).Normalized();
+				f[i] -= massSquared * ((p[i] / Square(d[i])) + (p[j] / Square(d[j]))) * kernel.gradient(dist, dir);
+			}
+		}
+	}
+}
+
+void SphSystemSolver3::computePressure()
+{
+	auto particles = sphSystemData3();
+	size_t numberOfParticls = particles->numOfParticles();
+	auto p = particles->pressures();
+	auto d = particles->densities();
+
+	const float targetDensity = particles->targetDensity();
+	const float eosScale = targetDensity * powf(_kSpeedOfSound, 2) / _eosExponent;
+
+	for (size_t i = 0; i < numberOfParticls; i++)
+	{
+		p[i] = computePressureFromEOS(d[i], targetDensity, eosScale, _eosExponent);
+	}
+}
+
+void SphSystemSolver3::accumulateViscosityForece()
+{
+
+}
+
+void SphSystemSolver3::computePseudeViscosity()
+{
+
+}
+
+float SphSystemSolver3::computePressureFromEOS(float density, float targetDensity, float eosScale, float eosExponent, float negativePressureScale)
+{
+	float p = eosScale / eosExponent * std::powf((density / targetDensity) - 1, eosExponent);
+	if (p < 0)
+	{
+		p *= negativePressureScale;
+	}
+	return p;
+}

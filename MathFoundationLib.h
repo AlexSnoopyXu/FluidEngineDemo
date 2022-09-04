@@ -13,6 +13,8 @@ constexpr float kPiD = 3.141592653589793f;
 
 class MathFoundationLib
 {
+public:
+	static float square(float x) { return powf(x, 2); }
 };
 
 struct Vector3D
