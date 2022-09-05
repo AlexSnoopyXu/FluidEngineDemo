@@ -241,7 +241,7 @@ void ParticleSystemSolver3::resolveCollision()
 		const float radius = _particleSystemData->radius();
 		for (size_t i = 0; i < n; i++)
 		{
-			_collider->resolveCollision(positions[i], velocities[i], radius, _restitutionCoeffcient, _newPositions[i], _newVelocities[i]);
+			_collider->resolveCollision(positions[i], velocities[i], radius, _restitutionCoefficient, _newPositions[i], _newVelocities[i]);
 		}
 	}
 
@@ -404,7 +404,25 @@ void SphSystemSolver3::computePressure()
 
 void SphSystemSolver3::accumulateViscosityForece()
 {
+	auto particles = sphSystemData3();
+	size_t numberOfParticls = particles->numOfParticles();
+	auto x = particles->positions();
+	auto d = particles->densities();
+	auto f = particles->forces();
+	auto v = particles->velocities();
 
+	const float massSquared = Square(particles->mass());
+	const SphSpikyKernel3 kernel(particles->radius());
+
+	for (size_t i = 0; i < numberOfParticls; i++)
+	{
+		const auto& neighbors = particles->neighborLists()[i];
+		for (size_t j : neighbors)
+		{
+			double dist = x[i].Distance(x[j]);
+			f[i] += viscosityCoefficient() * massSquared * (v[j] - v[i]) / d[j] * kernel.secondDerivative(dist);
+		}
+	}
 }
 
 void SphSystemSolver3::computePseudeViscosity()

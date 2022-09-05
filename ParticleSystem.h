@@ -81,6 +81,7 @@ protected:
 	virtual void onAdvanceTimStep(double timeIntervalInSeconds) override;
 	virtual void accumulateForces(double timeStepInSeconds);
 	void resolveCollision();
+	float viscosityCoefficient() const { return _viscosityCoefficient; }
 
 	virtual void onBeginAdvanceTimeStep() = 0;
 	virtual void onEndAdvanceTimeStep() = 0;
@@ -91,7 +92,8 @@ private:
 
 	float _dragCoefficient = 1e-4;
 	Vector3f _gravity = Vector3f(0.f, 9.8f, 0.f);
-	float _restitutionCoeffcient = 5.f;
+	float _restitutionCoefficient = 5.f;
+	float _viscosityCoefficient = 5.f;
 
 	VectorArray _newPositions;
 	VectorArray _newVelocities;
