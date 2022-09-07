@@ -85,6 +85,10 @@ protected:
 
 	virtual void onBeginAdvanceTimeStep() = 0;
 	virtual void onEndAdvanceTimeStep() = 0;
+	float negativePressureScale() { return -1.f; }
+
+	shared_ptr<Collider3> collider() { return _collider; }
+	float restitutionCoefficient() { return _restitutionCoefficient; }
 
 private:
 	shared_ptr<ParticleSystemData3> _particleSystemData;
@@ -121,6 +125,7 @@ protected:
 
 	virtual void accumulateNonPressureForces(float timeStepInSeconds);
 	virtual void accumulatePressureForces(float timeStepInSeconds);
+	void accumulatePressureForces(VectorArray& positions, FloatArray& densities, FloatArray& pressures, VectorArray& pressureForces);
 
 	void computePressure();
 	void accumulateViscosityForece();
@@ -128,10 +133,33 @@ protected:
 
 	float computePressureFromEOS(float density, float targetDensity, float eosScale, float eosExponent, float negativePressureScale = 0);
 
+protected:
+	VectorArray _pressureForces;
+
 private:
 	shared_ptr<SphSystemData3> _sphSystemData3;
 
 	const float _kMaxSearchRadius = 10.f;
 	const float _kSpeedOfSound = 340.f;
 	const float _eosExponent = 2.f;
+};
+
+class PciSphSystemSolver3 : public SphSystemSolver3 
+{
+	PciSphSystemSolver3() {}
+	virtual ~PciSphSystemSolver3(){}
+
+protected:
+	virtual void accumulatePressureForces(float timeStepInSeconds) override;
+
+private:
+	float computeDelta(float timeStepInSeconds) { return 23.3f; }
+	void resolveCollision(VectorArray& oriPositions, VectorArray& oriVelocities, VectorArray& newPositions, VectorArray& newVelocity);
+private:
+	float _maxDensityErrorRatio = 0.01f;
+	size_t _maxNumberOfIterations = 5;
+
+	VectorArray _tempPositions;
+	VectorArray _tempVelocities;	
+	FloatArray _densityErrors;
 };

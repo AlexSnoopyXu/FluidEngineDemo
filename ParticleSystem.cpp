@@ -212,6 +212,7 @@ ParticleSystemSolver3::ParticleSystemSolver3()
 {
 	_particleSystemData = std::make_shared<ParticleSystemData3>();
 	_wind = std::make_shared<ConstantVectorField3>();
+	_collider = std::make_shared<Collider3>();
 }
 
 void ParticleSystemSolver3::onAdvanceTimStep(double timeIntervalInSeconds)
@@ -367,6 +368,14 @@ void SphSystemSolver3::accumulatePressureForces(float timeStepInSeconds)
 
 	computePressure();
 	
+	accumulatePressureForces(x, d, p, _pressureForces);
+}
+
+void SphSystemSolver3::accumulatePressureForces(VectorArray& positions, FloatArray& densities, FloatArray& pressures, VectorArray& pressureForces)
+{
+	auto particles = sphSystemData3();
+	computePressure();
+
 	size_t numberOfParticls = particles->numOfParticles();
 	const float massSquared = Square(particles->mass());
 	const SphSpikyKernel3 kernel(particles->radius());
@@ -376,11 +385,11 @@ void SphSystemSolver3::accumulatePressureForces(float timeStepInSeconds)
 		const auto& neighbors = particles->neighborLists()[i];
 		for (size_t j : neighbors)
 		{
-			double dist = x[i].Distance(x[j]);
+			double dist = positions[i].Distance(positions[j]);
 			if (dist)
 			{
-				Vector3f dir = (x[j] - x[i]).Normalized();
-				f[i] -= massSquared * ((p[i] / Square(d[i])) + (p[j] / Square(d[j]))) * kernel.gradient(dist, dir);
+				Vector3f dir = (positions[j] - positions[i]).Normalized();
+				pressureForces[i] -= massSquared * ((pressures[i] / Square(densities[i])) + (pressures[j] / Square(densities[j]))) * kernel.gradient(dist, dir);
 			}
 		}
 	}
@@ -438,4 +447,112 @@ float SphSystemSolver3::computePressureFromEOS(float density, float targetDensit
 		p *= negativePressureScale;
 	}
 	return p;
+}
+
+void PciSphSystemSolver3::resolveCollision(VectorArray& oriPositions, VectorArray& oriVelocities, VectorArray& newPositions, VectorArray& newVelocity)
+{
+	auto particles = sphSystemData3();
+	auto positions = oriPositions;
+	auto velocities = oriVelocities;
+
+	if (collider() != nullptr)
+	{
+		size_t n = particles->numOfParticles();
+		const float radius = particles->radius();
+		for (size_t i = 0; i < n; i++)
+		{
+			collider()->resolveCollision(positions[i], velocities[i], radius, restitutionCoefficient(), newPositions[i], newVelocity[i]);
+		}
+	}
+}
+
+void PciSphSystemSolver3::accumulatePressureForces(float timeStepInSeconds)
+{
+	auto particles = sphSystemData3();
+	size_t numberOfParticls = particles->numOfParticles();
+	const float targetDensity = particles->targetDensity();
+	const float mass = particles->mass();
+	const float delta = computeDelta(timeStepInSeconds);
+
+	auto p = particles->pressures();
+	auto x = particles->positions();
+	auto v = particles->velocities();
+	auto f = particles->forces();
+
+	FloatArray ds(numberOfParticls, 0.0f);
+	SphStdKernel3 kernel(particles->radius());
+
+	_tempPositions.resize(numberOfParticls);
+	_tempVelocities.resize(numberOfParticls);
+	_pressureForces.resize(numberOfParticls);
+	_densityErrors.resize(numberOfParticls);
+
+	for (size_t i = 0; i < numberOfParticls; i++)
+	{
+		p[i] = 0.f;
+		_pressureForces[i] = Vector3f();
+		_densityErrors[i] = 0.f;
+	}
+
+	for (size_t i = 0; i < _maxNumberOfIterations; i++)
+	{
+		// Predict position and velocity
+		for (size_t i = 0; i < numberOfParticls; i++)
+		{
+			_tempVelocities[i] = v[i] + timeStepInSeconds / mass * (f[i] + _pressureForces[i]);
+			_tempPositions[i] = x[i] + timeStepInSeconds * _tempVelocities[i];
+		}
+
+		// Resolve collision
+		resolveCollision(_tempPositions, _tempVelocities, _tempPositions, _tempVelocities);;
+
+		// Compute pressure from density error
+		for (size_t i = 0; i < numberOfParticls; i++)
+		{
+			float weightSum = 0.f;
+			const auto& neighbors = particles->neighborLists()[i];
+			for (size_t j : neighbors)
+			{
+				float dist = _tempPositions[j].Distance(_tempPositions[i]);
+				weightSum += kernel(dist);
+			}
+			weightSum += kernel(0);
+
+			float density = weightSum * mass;
+			float densityError = density - targetDensity;
+			float pressure = delta * densityError;
+
+			if (pressure < 0)
+			{
+				pressure *= negativePressureScale();
+				densityError *= negativePressureScale();
+			}
+
+			p[i] += pressure;
+			ds[i] = density;
+			_densityErrors[i] = densityError;
+		}
+
+		// Compute pressure gradient force
+		SphSystemSolver3::accumulatePressureForces(x, ds, p, _pressureForces);
+
+		// Compute max density error
+		float maxDensityError = 0.f;
+		for (size_t i = 0; i < numberOfParticls; i++)
+		{
+			maxDensityError = abs(max(maxDensityError, _densityErrors[i]));
+		}
+
+		float densityErrorRatio = maxDensityError / targetDensity;
+		if (abs(densityErrorRatio) < _maxDensityErrorRatio)
+		{
+			break;
+		}
+	}
+
+	// Accumulate pressure force
+	for (size_t i = 0; i < numberOfParticls; i++)
+	{
+		f[i] += _pressureForces[i];
+	}
 }
