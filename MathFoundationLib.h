@@ -2,11 +2,13 @@
 #include "math.h"
 #include <vector>
 #include "MathGeoLib-1.5/src/Math/float3.h"
+#include "MathGeoLib-1.5/src/Geometry/Plane.h"
 
 typedef float3 Vector3f;
 typedef std::vector<Vector3f> VectorArray;
 typedef std::vector<float> FloatArray;
 typedef std::vector<size_t> SizeTArray;
+typedef Plane Surface3;
 
 
 constexpr float kPiD = 3.141592653589793f;

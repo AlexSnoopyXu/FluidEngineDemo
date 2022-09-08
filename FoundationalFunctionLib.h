@@ -2,6 +2,7 @@
 #include "MathFoundationLib.h"
 #include <functional>
 #include <vector>
+#include <iostream>
 
 enum class SPHKernelType {
 	None = 0,
@@ -12,12 +13,27 @@ enum class SPHKernelType {
 	Max
 };
 
+struct ColliderQueryResult3 {
+	float distance = 0.f;
+	Vector3f point;
+	Vector3f normal;
+	Vector3f velocity;
+};
+
 class Collider3 {
 public:
-	Collider3() {}
+	Collider3();
 	virtual ~Collider3() {}
 
 	void resolveCollision(const Vector3f& currentPosition, const Vector3f& currentVelocity, float radius, float restitutionCoefficent, Vector3f& newPosition, Vector3f& newVelocity);
+
+	bool isPenetrating(ColliderQueryResult3& colliderPoint, Vector3f& position, float radius);
+
+	void getClosestPoint(std::shared_ptr<Surface3> surface, Vector3f& queryPoint, ColliderQueryResult3& colliderPoint);
+
+private:
+	std::shared_ptr<Surface3> _surface;
+	float _frictionCofficient = 0.4f;
 };
 
 class PointNeighborSearcher3

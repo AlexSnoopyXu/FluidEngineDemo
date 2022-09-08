@@ -1,9 +1,52 @@
 /* Foundations function of particles */
 #include "FoundationalFunctionLib.h"
 
+Collider3::Collider3()
+{
+	_surface = std::make_shared<Surface3>();
+}
+
 void Collider3::resolveCollision(const Vector3f& currentPosition, const Vector3f& currentVelocity, float radius, float restitutionCoefficent, Vector3f& newPosition, Vector3f& newVelocity)
 {
+	ColliderQueryResult3 colliderPoint;
+	getClosestPoint(_surface, newPosition, colliderPoint);
+	if (isPenetrating(colliderPoint, newPosition, radius))
+	{
+		Vector3f targetNormal = colliderPoint.normal;
+		Vector3f targetPoint = colliderPoint.point + radius * targetNormal;
+		Vector3f colliderVelAtTargetPoint = colliderPoint.velocity;
 
+		Vector3f relativeVel = newVelocity - colliderVelAtTargetPoint;
+		float normalDotRelative = targetNormal.Dot(relativeVel);
+		Vector3f relativeVelN = normalDotRelative * targetNormal;
+		Vector3f relativeVelT = relativeVel - relativeVelN;
+
+		if (normalDotRelative < 0.f)
+		{
+			Vector3f deltaRelativeVelN = (-restitutionCoefficent - 1.0f) * relativeVelN;
+			relativeVelN *= restitutionCoefficent;
+			if (relativeVelT.LengthSq() > 0.f)
+			{
+				float frictionScale = std::max(1.0f - _frictionCofficient * relativeVelN.Length() / relativeVelT.Length(), 0.0f);
+				relativeVelT *= frictionScale;
+			}
+			newVelocity = relativeVelN + relativeVelT + colliderVelAtTargetPoint;
+		}
+		newPosition = targetPoint;
+	}
+}
+
+bool Collider3::isPenetrating(ColliderQueryResult3& colliderPoint, Vector3f& position, float radius)
+{
+	return (position - colliderPoint.point).Dot(colliderPoint.normal) < 0.0f || colliderPoint.distance < radius;
+}
+
+void Collider3::getClosestPoint(std::shared_ptr<Surface3> surface, Vector3f& queryPoint, ColliderQueryResult3& colliderPoint)
+{
+	colliderPoint.distance = surface->Distance(queryPoint);
+	colliderPoint.point = surface->ClosestPoint(queryPoint);
+	colliderPoint.normal = surface->normal;
+	colliderPoint.velocity;
 }
 
 PointHashGridSearcher3::PointHashGridSearcher3(const Vector3f& resolution, float gridSpacing) : _gridSpacing(gridSpacing), _resolution(resolution)
