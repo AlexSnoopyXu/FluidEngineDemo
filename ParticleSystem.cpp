@@ -7,12 +7,14 @@ ParticleSystemData3::ParticleSystemData3()
 
 void ParticleSystemData3::resize(size_t newNumberOfParticles)
 {
-
+	_positions.resize(newNumberOfParticles);
+	_velocities.resize(newNumberOfParticles);
+	_forces.resize(newNumberOfParticles);
 }
 
 size_t ParticleSystemData3::numOfParticles() const
 {
-	return 0;
+	return _positions.size();
 }
 
 const VectorArray& const ParticleSystemData3::positions() const
@@ -47,12 +49,23 @@ const std::vector<vector<size_t>>& ParticleSystemData3::neighborLists() const
 
 void ParticleSystemData3::addParticle(const Vector3f& newPosition, const Vector3f& newVelocity, const Vector3f& newForce)
 {
-
+	_positions.push_back(newPosition);
+	_velocities.push_back(newVelocity);
+	_forces.push_back(newForce);
 }
 
 void ParticleSystemData3::addParticles(const VectorArray& newPositions, const VectorArray& newVelocities, const VectorArray& newForce)
 {
-
+	if (newPositions.size() != newVelocities.size() || newVelocities.size() != newForce.size())
+	{
+		return;
+	}
+	for (size_t i = 0; i < newPositions.size(); i++)
+	{
+		_positions.push_back(newPositions[i]);
+		_velocities.push_back(newVelocities[i]);
+		_forces.push_back(newForce[i]);
+	}
 }
 
 void ParticleSystemData3::setMass(float mass)
@@ -211,7 +224,7 @@ float SphSystemData3::laplaciantAt(size_t i, const FloatArray& values, SPHKernel
 ParticleSystemSolver3::ParticleSystemSolver3()
 {
 	_particleSystemData = std::make_shared<ParticleSystemData3>();
-	_wind = std::make_shared<ConstantVectorField3>();
+	_wind = std::make_shared<ConstantVectorField3>(Vector3f(1.0f, 1.0f, 1.0f));
 	_collider = std::make_shared<Collider3>();
 }
 

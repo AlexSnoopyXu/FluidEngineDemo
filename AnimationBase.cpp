@@ -25,10 +25,5 @@ void PhysicsAnimation::onUpdate(const Frame& frame)
 
 void PhysicsAnimation::advanceTimeStep(double timeIntervalInSeconds)
 {
-
-}
-
-void SimpleMassSpringAnimation::onAdvanceTimStep(double timeIntervalInSeconds)
-{
-
+	onAdvanceTimStep(timeIntervalInSeconds);
 }

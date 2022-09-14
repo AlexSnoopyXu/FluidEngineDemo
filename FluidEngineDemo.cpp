@@ -5,6 +5,7 @@
 #include <array>
 #include <chrono>
 #include <thread>
+#include "ParticleSystem.h"
 
 const size_t kBufferSize = 80;
 const double M_PI = 3.141592653f;
@@ -127,9 +128,20 @@ void DemoDraw()
     fflush(stdout);
 }
 
+void DemoDraw_PBD()
+{
+    PciSphSystemSolver3 pciSphSysSolver;
+
+    const int fps = 100;
+    const double timeIntreval = 1.f / fps;
+
+}
+
 int main()
 {
     //DemoDraw();
+
+    DemoDraw_PBD();
 
     return 0;
 }

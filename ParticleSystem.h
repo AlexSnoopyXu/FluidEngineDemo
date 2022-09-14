@@ -36,8 +36,8 @@ private:
 	VectorArray _positions;
 	VectorArray _velocities;
 	VectorArray _forces;
-	float _mass;
-	float _radius;
+	float _mass = 1.f;
+	float _radius = 0.5f;
 
 	const size_t kDefaultHashGridResolution = 100;
 
@@ -146,6 +146,7 @@ private:
 
 class PciSphSystemSolver3 : public SphSystemSolver3 
 {
+public:
 	PciSphSystemSolver3() {}
 	virtual ~PciSphSystemSolver3(){}
 

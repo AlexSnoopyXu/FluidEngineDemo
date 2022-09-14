@@ -9,14 +9,14 @@ Collider3::Collider3()
 void Collider3::resolveCollision(const Vector3f& currentPosition, const Vector3f& currentVelocity, float radius, float restitutionCoefficent, Vector3f& newPosition, Vector3f& newVelocity)
 {
 	ColliderQueryResult3 colliderPoint;
-	getClosestPoint(_surface, newPosition, colliderPoint);
-	if (isPenetrating(colliderPoint, newPosition, radius))
+	getClosestPoint(_surface, currentPosition, colliderPoint);
+	if (isPenetrating(colliderPoint, currentPosition, radius))
 	{
 		Vector3f targetNormal = colliderPoint.normal;
 		Vector3f targetPoint = colliderPoint.point + radius * targetNormal;
 		Vector3f colliderVelAtTargetPoint = colliderPoint.velocity;
 
-		Vector3f relativeVel = newVelocity - colliderVelAtTargetPoint;
+		Vector3f relativeVel = currentVelocity - colliderVelAtTargetPoint;
 		float normalDotRelative = targetNormal.Dot(relativeVel);
 		Vector3f relativeVelN = normalDotRelative * targetNormal;
 		Vector3f relativeVelT = relativeVel - relativeVelN;
@@ -36,17 +36,22 @@ void Collider3::resolveCollision(const Vector3f& currentPosition, const Vector3f
 	}
 }
 
-bool Collider3::isPenetrating(ColliderQueryResult3& colliderPoint, Vector3f& position, float radius)
+bool Collider3::isPenetrating(ColliderQueryResult3& colliderPoint, const Vector3f& position, float radius)
 {
 	return (position - colliderPoint.point).Dot(colliderPoint.normal) < 0.0f || colliderPoint.distance < radius;
 }
 
-void Collider3::getClosestPoint(std::shared_ptr<Surface3> surface, Vector3f& queryPoint, ColliderQueryResult3& colliderPoint)
+void Collider3::getClosestPoint(std::shared_ptr<Surface3> surface, const Vector3f& queryPoint, ColliderQueryResult3& colliderPoint)
 {
 	colliderPoint.distance = surface->Distance(queryPoint);
 	colliderPoint.point = surface->ClosestPoint(queryPoint);
 	colliderPoint.normal = surface->normal;
-	colliderPoint.velocity;
+	colliderPoint.velocity = velocityAt(queryPoint);
+}
+
+Vector3f Collider3::velocityAt(const Vector3f& queryPoint)
+{
+	return Vector3f(0.f, 0.5f, 0.f);
 }
 
 PointHashGridSearcher3::PointHashGridSearcher3(const Vector3f& resolution, float gridSpacing) : _gridSpacing(gridSpacing), _resolution(resolution)

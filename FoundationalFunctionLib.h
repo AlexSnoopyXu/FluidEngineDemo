@@ -27,10 +27,11 @@ public:
 
 	void resolveCollision(const Vector3f& currentPosition, const Vector3f& currentVelocity, float radius, float restitutionCoefficent, Vector3f& newPosition, Vector3f& newVelocity);
 
-	bool isPenetrating(ColliderQueryResult3& colliderPoint, Vector3f& position, float radius);
+	bool isPenetrating(ColliderQueryResult3& colliderPoint, const Vector3f& position, float radius);
 
-	void getClosestPoint(std::shared_ptr<Surface3> surface, Vector3f& queryPoint, ColliderQueryResult3& colliderPoint);
+	void getClosestPoint(std::shared_ptr<Surface3> surface, const Vector3f& queryPoint, ColliderQueryResult3& colliderPoint);
 
+	Vector3f velocityAt(const Vector3f& queryPoint);
 private:
 	std::shared_ptr<Surface3> _surface;
 	float _frictionCofficient = 0.4f;

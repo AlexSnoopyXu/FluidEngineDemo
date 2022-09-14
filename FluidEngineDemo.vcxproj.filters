@@ -138,6 +138,9 @@
     <ClCompile Include="FoundationalFunctionLib.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="SpringAnimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimationBase.h">
@@ -327,6 +330,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="FoundationalFunctionLib.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SpringAnimation.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
